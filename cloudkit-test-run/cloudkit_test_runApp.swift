@@ -12,7 +12,7 @@ import SwiftData
 struct cloudkit_test_runApp: App {
     var body: some Scene {
         WindowGroup {
-            UsersView(minimumJoinDate: .now, sortOrder: [SortDescriptor(\User.name)])
+            UsersView(minimumJoinDate: .distantPast, sortOrder: [SortDescriptor(\User.name)])
                 .modelContainer(for: User.self)
         }
     }
