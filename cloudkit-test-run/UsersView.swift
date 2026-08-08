@@ -12,7 +12,6 @@ import SwiftData
 struct UsersView: View {
     @Environment(\.modelContext) var modelContext
     @Query var users: [User]
-    
     var body: some View {
         List(users) { user in
             HStack {

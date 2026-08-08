@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct cloudkit_test_runApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            UsersView(minimumJoinDate: .now, sortOrder: [SortDescriptor(\User.name)])
+                .modelContainer(for: User.self)
         }
     }
 }
