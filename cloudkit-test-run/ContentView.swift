@@ -1,79 +1,83 @@
 //
-//  ContentView.swift
+//  EditUserView.swift
 //  cloudkit-test-run
 //
-//  Created by T Krobot on 11/7/26.
+//  Created by T Krobot on 15/8/26.
 //
 
-import SwiftUI
-import CloudKit
 import SwiftData
+import SwiftUI
 
-// 1. Define the CloudKit-backed Schema
-@Model
-final class SharedItem {
-    var text: String
-    var timestamp: Date
-    
-    init(text: String, timestamp: Date = Date()) {
-        self.text = text
-        self.timestamp = timestamp
-    }
-}
-
-let myContainer = CKContainer(identifier: "iCloud.com.challenge2.cloudkitproject")
-
-
-// 2. The Main View
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query(sort: \SharedItem.timestamp, order: .reverse) private var items: [SharedItem]
-    
-    @State private var userInput: String = ""
+    @Environment(\.modelContext) var modelContext
+
+    @State private var showingUpcomingOnly = false
+
+    @State private var sortOrder = [
+        SortDescriptor(\User.name),
+        SortDescriptor(\User.joinDate),
+    ]
+
+    @Query(filter: #Predicate<User> { user in
+        user.name.localizedStandardContains("R") &&
+        user.city == "London"
+    }, sort: \User.name) var users: [User]
 
     var body: some View {
-        VStack(spacing: 16) {
-            // Input and Save
-            HStack {
-                TextField("Type to share...", text: $userInput)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                
-                Button("Save & Sync") {
-                    addItem()
-                }
-            }
-            .padding()
+        NavigationStack {
+            UsersView(minimumJoinDate: showingUpcomingOnly ? .now : .distantPast, sortOrder: sortOrder)
+                .navigationTitle("Users")
+                .toolbar {
+                    Button("Add Samples 1", systemImage: "plus", action: addSamples1)
 
-            // Display List of shared data
-            List(items) { item in
-                VStack(alignment: .leading) {
-                    Text(item.text)
-                        .font(.body)
-                    Text(item.timestamp, format: .dateTime.hour().minute().second())
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Button("Add Samples 1", systemImage: "plus", action: addSamples2)
+
+                    Menu("Sort", systemImage: "arrow.up.arrow.down") {
+                        Picker("Sort", selection: $sortOrder) {
+                            Text("Sort by Name")
+                                .tag([
+                                    SortDescriptor(\User.name),
+                                    SortDescriptor(\User.joinDate),
+                                ])
+                            
+                            Text("Sort by Join Date")
+                                .tag([
+                                    SortDescriptor(\User.joinDate),
+                                    SortDescriptor(\User.name)
+                                ])
+                        }
+                    }
                 }
-            }
         }
-        .frame(minWidth: 400, minHeight: 300)
-        .padding()
     }
 
-    private func addItem() {
-        guard !userInput.isEmpty else { return }
-        let newItem = SharedItem(text: userInput)
-        modelContext.insert(newItem)
-        userInput = "" // Clear input
-        
-        // Save to iCloud
-        do {
-            try modelContext.save()
-        } catch {
-            print("Failed to save item: \(error.localizedDescription)")
-        }
+    func addSamples1() {
+        try? modelContext.delete(model: User.self)
+
+        let first = User(name: "Ed Sheeran", city: "London", joinDate: .now.addingTimeInterval(86400 * -10))
+        let second = User(name: "Rosa Diaz", city: "New York", joinDate: .now.addingTimeInterval(86400 * -5))
+        let third = User(name: "Roy Kent", city: "London", joinDate: .now.addingTimeInterval(86400 * 5))
+        let fourth = User(name: "Johnny English", city: "London", joinDate: .now.addingTimeInterval(86400 * 10))
+
+        modelContext.insert(first)
+        modelContext.insert(second)
+        modelContext.insert(third)
+        modelContext.insert(fourth)
+    }
+
+    func addSamples2() {
+        let user1 = User(name: "Piper Chapman", city: "New York", joinDate: .now)
+        let job1 = Job(name: "Organize sock drawer", priority: 3)
+        let job2 = Job(name: "Make plans with Alex", priority: 4)
+
+        modelContext.insert(user1)
+
+        user1.jobs?.append(job1)
+        user1.jobs?.append(job2)
     }
 }
 
 #Preview {
     ContentView()
 }
+
