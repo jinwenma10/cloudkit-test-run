@@ -5,12 +5,10 @@
 //  Created by T Krobot on 8/8/26.
 //
 
-import SwiftUI
 import SwiftData
-
+import SwiftUI
 
 struct UsersView: View {
-    @Environment(\.modelContext) var modelContext
     @Query var users: [User]
     @State private var isAddingPerson = false
 
@@ -50,9 +48,9 @@ struct UsersView: View {
             }
         }
     }
-    
+
     init(minimumJoinDate: Date, sortOrder: [SortDescriptor<User>]) {
-        _users = Query(filter: #Predicate<User> {user in
+        _users = Query(filter: #Predicate<User> { user in
             user.joinDate >= minimumJoinDate
         }, sort: sortOrder)
     }
