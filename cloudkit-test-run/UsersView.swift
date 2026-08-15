@@ -10,21 +10,41 @@ import SwiftUI
 
 struct UsersView: View {
     @Query var users: [User]
+    @State private var isAddingPerson = false
 
     var body: some View {
-        List(users) { user in
-            HStack {
-                Text(user.name)
+        NavigationStack {
+            List {
+                ForEach(users) { user in
+                    HStack {
+                        Text(user.name)
 
-                Spacer()
+                        Spacer()
 
-                Text(String(user.unwrappedJobs.count))
-                    .fontWeight(.black)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(.blue)
-                    .foregroundStyle(.white)
-                    .clipShape(.capsule)
+                        Text(String(user.unwrappedJobs.count))
+                            .fontWeight(.black)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(.blue)
+                            .foregroundStyle(.white)
+                            .clipShape(.capsule)
+                    }
+                }
+                .onDelete(perform: deleteUsers)
+            }
+            .navigationTitle("Users")
+            .overlay {
+                if users.isEmpty {
+                    ContentUnavailableView("No people yet", systemImage: "person.slash", description: Text("Tap + to add someone."))
+                }
+            }
+            .toolbar {
+                Button("Add Person", systemImage: "plus") {
+                    isAddingPerson = true
+                }
+            }
+            .sheet(isPresented: $isAddingPerson) {
+                PersonDetailsView()
             }
         }
     }
@@ -33,6 +53,12 @@ struct UsersView: View {
         _users = Query(filter: #Predicate<User> { user in
             user.joinDate >= minimumJoinDate
         }, sort: sortOrder)
+    }
+    
+    func deleteUsers(at offsets: IndexSet) {
+        for offset in offsets {
+            modelContext.delete(users[offset])
+        }
     }
 }
 
